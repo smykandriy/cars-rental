@@ -83,9 +83,9 @@ class ReportRepository
 User "1" -- "0..1" CustomerProfile
 User "1" -- "0..*" RentalAgreement
 Car "1" -- "0..*" RentalAgreement
-RentalAgreement "1" -- "1" Deposit
-RentalAgreement "1" -- "0..*" Penalty
-RentalAgreement "1" -- "0..*" PaymentTransaction
+RentalAgreement "1" *-- "1" Deposit
+RentalAgreement "1" *-- "0..*" Penalty
+RentalAgreement "1" *-- "0..*" PaymentTransaction
 
 PricingStrategy <|.. BaseCarPricingStrategy
 PricingStrategy <|.. DurationPricingStrategy
@@ -99,7 +99,7 @@ InvoiceBuilder --> Invoice
 RentalState <|-- DraftState
 RentalState <|-- ActiveState
 RentalState <|-- ReturnedState
-RentalAgreement ..> RentalState
+RentalAgreement "1" -- "1" RentalState
 
 CarRepository ..> Car
 RentalRepository ..> RentalAgreement
