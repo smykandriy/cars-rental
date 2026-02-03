@@ -1,0 +1,24 @@
+@startuml
+left to right direction
+actor Customer
+actor Staff
+actor Admin
+
+Admin --|> Staff
+
+Customer --> (Register)
+Customer --> (Login / Refresh Token)
+Customer --> (View My Profile)
+Customer --> (Browse Cars)
+Customer --> (View My Rentals)
+
+Staff --> (Manage Fleet)
+Staff --> (Create Rental Agreement)
+Staff --> (Return Rental)
+Staff --> (View Rentals)
+Staff --> (Generate Occupancy Report)
+Staff --> (Generate Financial Report)
+
+Admin --> (Administer System)
+
+@enduml
