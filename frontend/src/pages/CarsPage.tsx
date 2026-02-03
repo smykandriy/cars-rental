@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { api, type Car } from '../api/client'
+import { ApiError, api, type Car } from '../api/client'
 import { PageHeader } from '../components/PageHeader'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { EmptyState } from '../components/ui/EmptyState'
 import { FormField } from '../components/ui/FormField'
 import { Input } from '../components/ui/Input'
+import { Modal } from '../components/ui/Modal'
 import { Select } from '../components/ui/Select'
 import { Spinner } from '../components/ui/Spinner'
 import { Table } from '../components/ui/Table'
@@ -31,6 +32,9 @@ export default function CarsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filters, setFilters] = useState({ query: '', status: 'ALL', carClass: 'ALL' })
+  const [deleteTarget, setDeleteTarget] = useState<Car | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const { user } = useAuth()
   const { notify } = useToast()
 
@@ -59,6 +63,27 @@ export default function CarsPage() {
       mounted = false
     }
   }, [notify])
+
+  const handleDeleteCar = async () => {
+    if (!deleteTarget) return
+    setDeleting(true)
+    setDeleteError(null)
+    try {
+      await api.deleteCar(deleteTarget.id)
+      setCars((prev) => prev.filter((car) => car.id !== deleteTarget.id))
+      notify('Car deleted from the fleet.', 'success')
+      setDeleteTarget(null)
+    } catch (err) {
+      let message = 'Unable to delete car. Please try again.'
+      if (err instanceof ApiError && (err.status === 409 || err.status === 400)) {
+        message = 'This car cannot be deleted because rentals are linked. Close or reassign rentals before deleting.'
+      }
+      setDeleteError(message)
+      notify(message, 'danger')
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   const classes = useMemo(() => Array.from(new Set(cars.map((car) => car.car_class))).sort(), [cars])
 
@@ -168,19 +193,28 @@ export default function CarsPage() {
                     <Badge tone={statusTone(car.status)}>{car.status}</Badge>
                   </td>
                   <td>
-                    <Link to={`/cars/${car.id}`} className="link">
-                      View
-                    </Link>
-                    {user && user.role !== 'CUSTOMER' && (
-                      <>
-                        <span className="divider" aria-hidden="true">
-                          •
-                        </span>
-                        <Link to={`/cars/${car.id}/edit`} className="link">
-                          Edit
-                        </Link>
-                      </>
-                    )}
+                    <div className="table-actions">
+                      <Link to={`/cars/${car.id}`} className="link">
+                        View
+                      </Link>
+                      {user && user.role !== 'CUSTOMER' && (
+                        <>
+                          <Link to={`/cars/${car.id}/edit`} className="link">
+                            Edit
+                          </Link>
+                          <Button
+                            type="button"
+                            variant="danger"
+                            onClick={() => {
+                              setDeleteTarget(car)
+                              setDeleteError(null)
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -188,6 +222,41 @@ export default function CarsPage() {
           </Table>
         )}
       </div>
+      <Modal
+        open={Boolean(deleteTarget)}
+        title="Delete car"
+        description="Deleting a car removes it from the fleet. If cascade deletion is enabled, related rentals will be removed as well."
+        onClose={() => {
+          if (!deleting) {
+            setDeleteTarget(null)
+            setDeleteError(null)
+          }
+        }}
+      >
+        <p>
+          {deleteTarget ? (
+            <>
+              You are about to delete <strong>{deleteTarget.brand}</strong> <strong>{deleteTarget.model}</strong>. This action
+              cannot be undone. If deletion is blocked, close or reassign any active rentals tied to this car.
+            </>
+          ) : (
+            'Select a car to delete.'
+          )}
+        </p>
+        {deleteError && (
+          <p className="error" role="alert">
+            {deleteError}
+          </p>
+        )}
+        <div className="modal__actions">
+          <Button variant="ghost" onClick={() => setDeleteTarget(null)} disabled={deleting}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={handleDeleteCar} disabled={deleting}>
+            {deleting ? 'Deleting...' : 'Delete car'}
+          </Button>
+        </div>
+      </Modal>
     </section>
   )
 }
