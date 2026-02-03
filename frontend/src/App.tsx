@@ -1,52 +1,84 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import Layout from './components/Layout'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import AppShell from './components/AppShell'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import CarsPage from './pages/CarsPage'
+import CarDetailsPage from './pages/CarDetailsPage'
+import CarFormPage from './pages/CarFormPage'
 import RentalsPage from './pages/RentalsPage'
+import RentalDetailsPage from './pages/RentalDetailsPage'
+import RentalFormPage from './pages/RentalFormPage'
 import ReportsPage from './pages/ReportsPage'
+import CustomersPage from './pages/CustomersPage'
+import CustomerDetailsPage from './pages/CustomerDetailsPage'
 import AdminPage from './pages/AdminPage'
-import { useAuth, AuthProvider } from './routes/useAuth'
-
-const ProtectedRoute = ({ children, roles }: { children: JSX.Element; roles?: string[] }) => {
-  const { user } = useAuth()
-  if (!user) {
-    return <Navigate to="/login" />
-  }
-  if (roles && !roles.includes(user.role)) {
-    return <Navigate to="/" />
-  }
-  return children
-}
+import ErrorBoundary from './components/ErrorBoundary'
+import { AuthProvider } from './routes/useAuth'
+import { RequireAuth } from './routes/RequireAuth'
 
 const RoutesView = () => (
   <Routes>
-    <Route element={<Layout />}>
+    <Route element={<AppShell />}>
       <Route path="/" element={<CarsPage />} />
+      <Route path="/cars/new" element={<RequireAuth roles={["STAFF", "ADMIN"]}><CarFormPage /></RequireAuth>} />
+      <Route path="/cars/:id" element={<RequireAuth roles={["CUSTOMER", "STAFF", "ADMIN"]}><CarDetailsPage /></RequireAuth>} />
+      <Route path="/cars/:id/edit" element={<RequireAuth roles={["STAFF", "ADMIN"]}><CarFormPage /></RequireAuth>} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route
         path="/rentals"
         element={
-          <ProtectedRoute roles={["CUSTOMER", "STAFF", "ADMIN"]}>
+          <RequireAuth roles={["CUSTOMER", "STAFF", "ADMIN"]}>
             <RentalsPage />
-          </ProtectedRoute>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/rentals/new"
+        element={
+          <RequireAuth roles={["STAFF", "ADMIN"]}>
+            <RentalFormPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/rentals/:id"
+        element={
+          <RequireAuth roles={["CUSTOMER", "STAFF", "ADMIN"]}>
+            <RentalDetailsPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/customers"
+        element={
+          <RequireAuth roles={["STAFF", "ADMIN"]}>
+            <CustomersPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/customers/:id"
+        element={
+          <RequireAuth roles={["STAFF", "ADMIN"]}>
+            <CustomerDetailsPage />
+          </RequireAuth>
         }
       />
       <Route
         path="/reports"
         element={
-          <ProtectedRoute roles={["STAFF", "ADMIN"]}>
+          <RequireAuth roles={["STAFF", "ADMIN"]}>
             <ReportsPage />
-          </ProtectedRoute>
+          </RequireAuth>
         }
       />
       <Route
         path="/admin"
         element={
-          <ProtectedRoute roles={["ADMIN"]}>
+          <RequireAuth roles={["ADMIN"]}>
             <AdminPage />
-          </ProtectedRoute>
+          </RequireAuth>
         }
       />
     </Route>
@@ -57,7 +89,9 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <RoutesView />
+        <ErrorBoundary>
+          <RoutesView />
+        </ErrorBoundary>
       </BrowserRouter>
     </AuthProvider>
   )

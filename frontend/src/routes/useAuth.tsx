@@ -5,14 +5,17 @@ const AuthContext = createContext<{
   user: User | null
   logout: () => void
   setUser: (user: User | null) => void
+  loading: boolean
 }>({
   user: null,
   logout: () => undefined,
-  setUser: () => undefined
+  setUser: () => undefined,
+  loading: true
 })
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const token = tokenStorage.get()
@@ -21,6 +24,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .me()
         .then(setUser)
         .catch(() => tokenStorage.clear())
+        .finally(() => setLoading(false))
+    } else {
+      setLoading(false)
     }
   }, [])
 
@@ -29,7 +35,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(null)
   }
 
-  return <AuthContext.Provider value={{ user, logout, setUser }}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={{ user, logout, setUser, loading }}>{children}</AuthContext.Provider>
 }
 
 export const useAuth = () => useContext(AuthContext)

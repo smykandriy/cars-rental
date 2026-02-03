@@ -1,84 +1,121 @@
-import { useEffect, useState } from 'react'
-import { api } from '../api/client'
+import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { api, type Car, type Rental } from '../api/client'
+import { PageHeader } from '../components/PageHeader'
+import { Alert } from '../components/ui/Alert'
+import { Button } from '../components/ui/Button'
+import { Spinner } from '../components/ui/Spinner'
+import { Table } from '../components/ui/Table'
+import { useToast } from '../components/ui/Toast'
 
 export default function AdminPage() {
-  const [cars, setCars] = useState<any[]>([])
-  const [rentals, setRentals] = useState<any[]>([])
-  const [form, setForm] = useState({
-    brand: '',
-    model: '',
-    car_class: '',
-    year: '',
-    base_daily_price: '',
-    status: 'AVAILABLE'
-  })
-
-  const load = () => {
-    api.cars().then(setCars)
-    api.rentals().then(setRentals)
-  }
+  const [cars, setCars] = useState<Car[]>([])
+  const [rentals, setRentals] = useState<Rental[]>([])
+  const [loading, setLoading] = useState(true)
+  const { notify } = useToast()
 
   useEffect(() => {
-    load()
-  }, [])
+    let mounted = true
+    Promise.all([api.cars(), api.rentals()])
+      .then(([carsData, rentalsData]) => {
+        if (mounted) {
+          setCars(carsData)
+          setRentals(rentalsData)
+        }
+      })
+      .catch(() => {
+        notify('Unable to load admin summary', 'danger')
+      })
+      .finally(() => {
+        if (mounted) {
+          setLoading(false)
+        }
+      })
+    return () => {
+      mounted = false
+    }
+  }, [notify])
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault()
-    await api.createCar({
-      brand: form.brand,
-      model: form.model,
-      car_class: form.car_class,
-      year: Number(form.year),
-      base_daily_price: form.base_daily_price,
-      status: form.status
-    })
-    setForm({ brand: '', model: '', car_class: '', year: '', base_daily_price: '', status: 'AVAILABLE' })
-    load()
-  }
+  const summary = useMemo(() => {
+    const totalCars = cars.length
+    const available = cars.filter((car) => car.status === 'AVAILABLE').length
+    const activeRentals = rentals.filter((rental) => rental.status === 'ACTIVE').length
+    return { totalCars, available, activeRentals }
+  }, [cars, rentals])
 
   return (
     <section>
-      <h2>Admin</h2>
-      <div className="grid two">
-        <form className="card form" onSubmit={handleSubmit}>
-          <h3>Manage Cars</h3>
-          <input placeholder="Brand" value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} />
-          <input placeholder="Model" value={form.model} onChange={(e) => setForm({ ...form, model: e.target.value })} />
-          <input placeholder="Class" value={form.car_class} onChange={(e) => setForm({ ...form, car_class: e.target.value })} />
-          <input placeholder="Year" value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })} />
-          <input
-            placeholder="Base daily price"
-            value={form.base_daily_price}
-            onChange={(e) => setForm({ ...form, base_daily_price: e.target.value })}
-          />
-          <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-            <option value="AVAILABLE">Available</option>
-            <option value="RENTED">Rented</option>
-            <option value="MAINTENANCE">Maintenance</option>
-          </select>
-          <button type="submit">Add Car</button>
-        </form>
-        <div className="card">
-          <h3>Cars</h3>
-          <ul>
-            {cars.map((car) => (
-              <li key={car.id}>
-                {car.brand} {car.model} - {car.status}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-      <div className="card">
-        <h3>Rentals Overview</h3>
-        <ul>
-          {rentals.map((rental) => (
-            <li key={rental.id}>
-              #{rental.id} - {rental.car_display} ({rental.status})
-            </li>
-          ))}
-        </ul>
-      </div>
+      <PageHeader title="Admin tools" subtitle="Quick access to fleet and rental operations." />
+      {loading ? (
+        <Spinner label="Loading admin overview" />
+      ) : (
+        <>
+          <div className="summary-grid">
+            <div>
+              <strong>Total cars</strong>
+              <p>{summary.totalCars}</p>
+            </div>
+            <div>
+              <strong>Available cars</strong>
+              <p>{summary.available}</p>
+            </div>
+            <div>
+              <strong>Active rentals</strong>
+              <p>{summary.activeRentals}</p>
+            </div>
+          </div>
+          <div className="grid two">
+            <div className="card">
+              <h2 className="section-title">Quick actions</h2>
+              <div className="stack">
+                <Button as="link" to="/cars/new">
+                  Add a new car
+                </Button>
+                <Button as="link" to="/rentals/new" variant="secondary">
+                  Issue rental
+                </Button>
+                <Button as="link" to="/reports" variant="ghost">
+                  View reports
+                </Button>
+              </div>
+              <Alert tone="info" title="Role visibility">
+                Only admins can access this overview. Staff users should use the rentals and cars pages.
+              </Alert>
+            </div>
+            <div className="card">
+              <h2 className="section-title">Recent rentals</h2>
+              {rentals.length === 0 ? (
+                <p>No rentals yet.</p>
+              ) : (
+                <Table caption="Recent rentals">
+                  <thead>
+                    <tr>
+                      <th scope="col">Rental</th>
+                      <th scope="col">Car</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rentals.slice(0, 5).map((rental) => (
+                      <tr key={rental.id}>
+                        <td>#{rental.id}</td>
+                        <td>{rental.car_display ?? rental.car}</td>
+                        <td>{rental.status}</td>
+                        <td>
+                          <Link to={`/rentals/${rental.id}`} className="link">
+                            View
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </section>
   )
 }
