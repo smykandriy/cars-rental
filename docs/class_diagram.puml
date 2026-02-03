@@ -24,15 +24,29 @@ class RentalAgreement {
   actual_return_date
   status
 }
-class Deposit { amount; status }
-class Penalty { type; amount; comment }
-class PaymentTransaction { transaction_type; amount; created_at; note }
+class Deposit {
+  amount
+  status
+}
+class Penalty {
+  type
+  amount
+  comment
+}
+class PaymentTransaction {
+  transaction_type
+  amount
+  created_at
+  note
+}
 
 interface PricingStrategy {
   +multiplier(days, car_year, issue_date)
 }
 class BaseCarPricingStrategy
-class DurationPricingStrategy { discount_tiers }
+class DurationPricingStrategy {
+  discount_tiers
+}
 class YearFactorStrategy
 class CompositePricingStrategy {
   +calculate(base_price, days, car_year, issue_date)
@@ -41,9 +55,17 @@ class PricingStrategyFactory {
   +build()
 }
 
-class LineItem { description; amount }
-class Invoice { total }
-class InvoiceBuilder { +add_item(); +build() }
+class LineItem {
+  description
+  amount
+}
+class Invoice {
+  total
+}
+class InvoiceBuilder {
+  +add_item()
+  +build()
+}
 
 abstract class RentalState {
   +activate(rental)
