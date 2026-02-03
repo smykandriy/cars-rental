@@ -30,8 +30,9 @@ class RentalViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        deposit_amount = serializer.validated_data["deposit_amount"]
         rental = serializer.save(status="DRAFT")
-        create_rental(rental, serializer.validated_data["deposit_amount"])
+        create_rental(rental, deposit_amount)
         return Response(RentalAgreementSerializer(rental).data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["post"], url_path="return")
