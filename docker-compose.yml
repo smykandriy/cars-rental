@@ -8,7 +8,7 @@ services:
       POSTGRES_USER: cars_rental
       POSTGRES_PASSWORD: cars_rental
     ports:
-      - "5432:5432"
+      - "5436:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
 
@@ -25,18 +25,19 @@ services:
     volumes:
       - ./backend:/app
     ports:
-      - "8000:8000"
+      - "8004:8000"
     depends_on:
       - db
 
   frontend:
     build: ./frontend
     environment:
-      VITE_API_URL: http://localhost:8000/api
+      VITE_API_URL: http://localhost:8004/api
     volumes:
       - ./frontend:/app
+      - /app/node_modules
     ports:
-      - "5173:5173"
+      - "5174:5173"
     depends_on:
       - backend
 
