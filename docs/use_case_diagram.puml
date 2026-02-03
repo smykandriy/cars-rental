@@ -4,17 +4,21 @@ actor Customer
 actor Staff
 actor Admin
 
-Customer --> (Register/Login)
+Admin --|> Staff
+
+Customer --> (Register)
+Customer --> (Login / Refresh Token)
+Customer --> (View My Profile)
 Customer --> (Browse Cars)
 Customer --> (View My Rentals)
 
+Staff --> (Manage Fleet)
 Staff --> (Create Rental Agreement)
-Staff --> (Return Car)
+Staff --> (Return Rental)
+Staff --> (View Rentals)
 Staff --> (Generate Occupancy Report)
 Staff --> (Generate Financial Report)
-Staff --> (Manage Customers)
 
-Admin --> (Manage Fleet)
-Admin --> (Manage Rentals)
-Admin --> (Generate Reports)
+Admin --> (Administer System)
+
 @enduml
