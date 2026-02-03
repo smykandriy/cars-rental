@@ -1,18 +1,21 @@
 # Use cases
 
 ## Actors
-- Customer
-- Staff
-- Admin
+- **Customer**
+- **Staff** (STAFF role)
+- **Admin** (ADMIN role)
 
-## Use cases
-1. **Register/Login**
-2. **Browse Cars**
-3. **Create Rental Agreement** (staff/admin)
-4. **Return Car** (staff/admin)
-5. **View My Rentals** (customer)
-6. **Generate Occupancy Report** (staff/admin)
-7. **Generate Financial Report** (staff/admin)
-8. **Manage Fleet** (admin)
+## Use case list (brief)
+1. **Register account**: Create a customer account with profile details.
+2. **Authenticate (login/refresh)**: Obtain or refresh JWT tokens.
+3. **View my profile**: Retrieve the authenticated user's profile info.
+4. **Browse cars**: List or search available cars.
+5. **Manage fleet** (staff/admin): Create, update, or delete cars.
+6. **Create rental agreement** (staff/admin): Draft a rental, collect deposit, set car to rented.
+7. **View rentals**: Customer sees their rentals; staff/admin sees all rentals.
+8. **Return rental** (staff/admin): Record return date, assess penalties, refund deposit, close rental.
+9. **Occupancy report** (authenticated): View car occupancy for a date.
+10. **Financial report** (staff/admin): Revenue, penalties, and counts per car.
+11. **Admin console** (admin): Manage users, rentals, fleet, deposits, penalties, and transactions via Django admin.
 
-See `use_case_diagram.puml` for diagram.
+See `use_case_diagram.puml` for the diagram.

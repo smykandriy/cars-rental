@@ -1,15 +1,89 @@
 @startuml
+skinparam classAttributeIconSize 0
+
 class User {
   email
   full_name
   role
 }
-class CustomerProfile { address; phone }
-class Car { brand; model; car_class; year; base_daily_price; status }
-class RentalAgreement { issue_date; expected_return_date; actual_return_date; status }
-class Deposit { amount; status }
-class Penalty { type; amount }
-class PaymentTransaction { transaction_type; amount; created_at }
+class CustomerProfile {
+  address
+  phone
+}
+class Car {
+  brand
+  model
+  car_class
+  year
+  base_daily_price
+  status
+}
+class RentalAgreement {
+  issue_date
+  expected_return_date
+  actual_return_date
+  status
+}
+class Deposit {
+  amount
+  status
+}
+class Penalty {
+  type
+  amount
+  comment
+}
+class PaymentTransaction {
+  transaction_type
+  amount
+  created_at
+}
+
+interface PricingStrategy {
+  multiplier(days, car_year, issue_date)
+}
+class BaseCarPricingStrategy
+class DurationPricingStrategy
+class YearFactorStrategy
+class CompositePricingStrategy {
+  calculate(base_price, days, car_year, issue_date)
+}
+class PricingStrategyFactory {
+  build()
+}
+
+class InvoiceBuilder {
+  add_item(description, amount)
+  build()
+}
+class Invoice {
+  total
+}
+class LineItem {
+  description
+  amount
+}
+
+class RentalState {
+  activate(rental)
+  return_car(rental)
+  close(rental)
+}
+class DraftState
+class ActiveState
+class ReturnedState
+
+class CarRepository {
+  with_current_rental(date)
+  set_status(car, status)
+}
+class RentalRepository {
+  for_user(user)
+  active()
+}
+class ReportRepository {
+  financial(date_from, date_to)
+}
 
 User "1" -- "0..1" CustomerProfile
 User "1" -- "0..*" RentalAgreement
@@ -17,4 +91,22 @@ Car "1" -- "0..*" RentalAgreement
 RentalAgreement "1" -- "1" Deposit
 RentalAgreement "1" -- "0..*" Penalty
 RentalAgreement "1" -- "0..*" PaymentTransaction
+
+PricingStrategy <|.. BaseCarPricingStrategy
+PricingStrategy <|.. DurationPricingStrategy
+PricingStrategy <|.. YearFactorStrategy
+CompositePricingStrategy o-- PricingStrategy
+PricingStrategyFactory ..> CompositePricingStrategy
+
+InvoiceBuilder ..> LineItem
+InvoiceBuilder ..> Invoice
+Invoice "1" o-- "0..*" LineItem
+
+RentalState <|-- DraftState
+RentalState <|-- ActiveState
+RentalState <|-- ReturnedState
+
+CarRepository ..> Car
+RentalRepository ..> RentalAgreement
+ReportRepository ..> PaymentTransaction
 @enduml

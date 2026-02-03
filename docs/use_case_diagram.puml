@@ -4,17 +4,44 @@ actor Customer
 actor Staff
 actor Admin
 
-Customer --> (Register/Login)
-Customer --> (Browse Cars)
-Customer --> (View My Rentals)
+rectangle "Car Rental System" {
+  (Register account) as UC_Register
+  (Authenticate) as UC_Login
+  (View profile) as UC_Profile
+  (Browse cars) as UC_Browse
+  (Manage fleet) as UC_Fleet
+  (Create rental) as UC_CreateRental
+  (View rentals) as UC_ViewRentals
+  (Return rental) as UC_Return
+  (Occupancy report) as UC_Occupancy
+  (Financial report) as UC_Financial
+  (Admin console) as UC_Admin
+}
 
-Staff --> (Create Rental Agreement)
-Staff --> (Return Car)
-Staff --> (Generate Occupancy Report)
-Staff --> (Generate Financial Report)
-Staff --> (Manage Customers)
+Customer --> UC_Register
+Customer --> UC_Login
+Customer --> UC_Profile
+Customer --> UC_Browse
+Customer --> UC_ViewRentals
 
-Admin --> (Manage Fleet)
-Admin --> (Manage Rentals)
-Admin --> (Generate Reports)
+Staff --> UC_Login
+Staff --> UC_Profile
+Staff --> UC_Browse
+Staff --> UC_Fleet
+Staff --> UC_CreateRental
+Staff --> UC_ViewRentals
+Staff --> UC_Return
+Staff --> UC_Occupancy
+Staff --> UC_Financial
+
+Admin --> UC_Login
+Admin --> UC_Profile
+Admin --> UC_Browse
+Admin --> UC_Fleet
+Admin --> UC_CreateRental
+Admin --> UC_ViewRentals
+Admin --> UC_Return
+Admin --> UC_Occupancy
+Admin --> UC_Financial
+Admin --> UC_Admin
 @enduml
