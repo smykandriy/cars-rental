@@ -41,6 +41,10 @@ class RentalCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Rental customer must be a CUSTOMER")
         return value
 
+    def create(self, validated_data):
+        validated_data.pop("deposit_amount", None)
+        return super().create(validated_data)
+
 
 class RentalReturnSerializer(serializers.Serializer):
     actual_return_date = serializers.DateField(required=False)
